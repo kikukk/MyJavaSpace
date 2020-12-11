@@ -1,0 +1,136 @@
+UDP聊天项目-技术规范
+https://www.kdocs.cn/l/cpJvjox0cdEi
+
+v0.1.0新版本计划内容
+告别机制：
+1.服务器收到某客户发来的下线指令，则立刻判断该用户下线。
+
+(待定) 双心跳包机制：
+1.客户端从登录后开始计时，60s内未收到服务器的心跳指令，则判断本地与服务器离线，返回登录界面。
+2.服务器每隔60s，对在线列表内的所有客户发送一条心跳指令，并开始计时10s。
+3.客户端收到心跳后重置本地计时(重新计下一个60s)，并尽快给服务器回复一条心跳指令。
+4.服务器在10s计时结束后还未收到某位客户的心跳回复，则判断该用户下线。
+-a.表现为：每隔60s服务器群发一次心跳，各客户端接收并立刻回复心跳。
+-b.实际上：客户端的计时应略大于60s，如采用65s，防止网络延迟误判。服务端不用改。
+
+用户基本信息：
+1.用户名account(3~16英文或数字，不能改，不能重复)
+2.密码password(6~16英文或数字，可改)
+3.昵称name(2~16位GBK字符，不可重复)。
+-a. 以上均为客户端限制标准。服务端使用32位定长字符串来储存。
+
+指令说明：
+【上传部分（客户端发给服务器）】
+前缀【request\t】：向服务器发送请求，服务器要执行命令和改变一些储存信息。
+登录login：【request\tlogin\t用户名\t密码】
+注册signup：【request\tsignup\t用户名\t密码\t昵称】
+更改change：【request\tchange\t用户名\t旧密码\t新密码\t新昵称】
+下线offline：【request\toffline】
+心跳beats：【request\tbeats】
+
+前缀【send\t】：用户发送出一段消息。
+文本text：【send\ttext\t文本内容】
+(待定)图片picture：【send\tpicture\t图片】
+(待定)文件file：【send\tfile\t文件】
+
+前缀【ask\t】：向服务器发送询问，服务器应回复问题。客户端可能在未登录账号的情况下发出询问指令。
+连接connect： 【ask\tconnect】 测试本客户端是否已连上服务器。
+账号account： 【ask\taccount\t账号】 询问关于这个账号名的存在性信息。
+昵称name： 【ask\tname\t昵称】 询问关于这个昵称的存在性信息。
+(待定)在线人数onlinenumber： 【ask\tonlinenumber】 询问在线人数。
+
+
+【下传部分（服务器发给客户端）】
+
+前缀【reply\t指令类型\t回复答案】 ：回复客户端的ask指令。
+连接connect： 【reply\tconnect】 收到ask\tconnect后立刻回复此指令。
+账号account已存在existed： 【reply\taccount\t账号\texisted】
+注：为何要加”账号\t”？因为客户端可能短时间频繁修改并验证询问账号存在性，为了减少接收回复时出错的概率，加一道检验比较好
+账号account不存在notexist： 【reply\taccount\t账号\tnotexist】
+账号account不合法(与管理员账号冲突)或无法识别error： 【reply\taccount\t账号\terror】
+昵称name已存在existed： 【reply\tname\t昵称\texisted】
+昵称name不存在notexist： 【reply\tname\t昵称\tnotexist】
+昵称name不合法(如与保留字冲突)或无法识别error： 【reply\tname\t昵称\terror】
+(待定)在线人数onlinenumber： 【reply\tonlinenumber\t人数数值】
+
+前缀【message\t类型\t发送者\t时间\t】：目标用户发送一段消息。
+文本text：【message\ttext\t发送者\t时间\t文本内容】
+通知notice：【message\tnotice\t发送者(admin)\t时间\t通知文本】有人上线下线等通知
+(待定)图片picture：【message\tpicture\t发送者\t时间\t图片】
+(待定)文件file：【message\tfile\t发送者\t时间\t文件】
+
+前缀【confirm\t类型】:给客户端发送确认情报。
+心跳beats：【confirm\tbeats】
+
+成功通知：后缀【success】
+登录login：【confirm\tlogin\tsuccess】
+注册signup：【confirm\tsignup\tsuccess】
+更改change：【confirm\tchange\tsuccess】
+
+错误通知：【terror\t错误类型\t】
+登录查无此账号：【confirm\tlogin\terror\taccount】
+登录密码错误：【confirm\tlogin\terror\tpassword】
+
+注册账号错误：【confirm\tsignup\terror\taccount】
+注册密码错误：【confirm\tsignup\terror\tpassword】
+注册昵称不合法：【confirm\tsignup\terror\tname】
+
+更改信息时旧密码错误：【confirm\tchange\terror\tpassword】
+更改信息时新密码不合法：【confirm\tchange\terror\tpasswordNew】
+更改信息时新昵称不合法：【confirm\tchange\terror\tname】
+
+
+
+表情包机制 v0.1
+
+·一个用户能使用和显示的表情包，只与本地文件夹里储存的图片资源有关。无论服务器还是客户端，都不储存任何图片资源或表情包列表。即，表情包对于服务器 和客户端的绝大多数组件，是完全透明的。
+
+·客户端启动时，扫描指定文件夹（当前为“/.emoji”）下所有的.png文件并将其文件名和内容写入内存。在消息中插入和识别表情包的符号是“ #(名称) ”。
+
+·例：若A用户存在一张“开心.png”，他客户端的表情包列表就会有“开心”这个选项；点击后会往当前编辑框插入“#(开心)”字符。当B用户收到了含有“#(开心)”的消息，且B本地也存有名为“开心.png”的文件，则B的消息面板里会显示出本地“开心.png”这张文件。若B本地没有这个文件名的图片，则消息面板会原封不动的显示“#(开心)”字样。
+
+
+request
+	login
+		request\tlogin\taccount\tpassword
+		-confirm\tlogin\tsuccess
+		-confirm\tlogin\terror\tpassword
+		-confirm\tlogin\terror\taccount
+		-message\tnoteice\tadmin\t上线时间\t上线用户名已上线
+	signup
+		request\tsignup\taccount\tpassword\tname
+		-confirm\tsignup\terror\taccount
+		-confirm\tsignup\terror\tname
+		-confirm\tsignup\tsuccess
+	change
+		request\tchange\taccount\tpassword_1\tpassword_2\tname
+		-confirm\tchange\terror\tname
+		-confirm\tchange\tsuccess
+		-confirm\tchange\terror\tpassword
+message
+	text
+		message\ttext\tcurInfo
+		-message\ttext\t发送方用户名\t发送时间\t信息内容
+	picture
+		message\timage\t文件名字符串\t文件大小\t（文件内容）
+		-message\timage\t发送方用户名\t发送时间\t文件名\t文件大小\t文件内容
+	file
+		message\tfile\t文件名字符串\t文件大小\t（文件内容）
+		-message\tfile\t发送方用户名\t发送时间\t文件名\t文件大小\t文件内容
+ask
+	connect
+		ask\tconnect\t
+		-reply\tconnect
+	account
+		ask\taccount\t账号
+		-reply\taccount\t账号\texisted
+		-reply\taccount\t账号\tnoexisted
+	name
+		ask\tname\t用户名
+		-reply\tname\t用户名\texisted
+		-reply\tname\t用户名\tnoexisted
+	onlinenumber
+		ask\tonlinenumber\t
+		-reply\tonlinenumber\t在线人数
+用户与服务器断开连接，服务器向所有用户发送
+	get\t系统消息\t发送时间\t下线用户名已下线

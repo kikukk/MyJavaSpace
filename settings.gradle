@@ -1,0 +1,5 @@
+rootProject.name = 'MyJavaSpace'
+include 'ACM'
+include 'Application'
+include 'HTML'
+
