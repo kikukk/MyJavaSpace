@@ -31,6 +31,7 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-context', version: '5.2.8.RELEASE'
     // https://mvnrepository.com/artifact/com.google.guava/guava
     compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
+
     //getter/setter插件
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compile group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
@@ -38,20 +39,4 @@ dependencies {
     //spring框架依赖注入
     // https://mvnrepository.com/artifact/org.springframework/spring-aop
     compile group: 'org.springframework', name: 'spring-aop', version: '5.3.1'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

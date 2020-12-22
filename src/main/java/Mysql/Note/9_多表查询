@@ -1,0 +1,86 @@
+## 多表查询：
+    查询语法：
+        select 列名列表 from 表名列表 where...
+
+    笛卡尔积：
+        有两个集合A,B。取这两个集合的所有组成情况。
+        要完成多表查询，需要消除无用的数据
+    多表查询的分类：
+        1.内连接查询：
+            1.隐式内连接：使用where条件消除无用数据
+            2.显式内连接：select 字段列表 from 表名1 inner join 表名2 on 条件;
+                1.从哪些表中查询数据
+                2.条件是什么
+                3.查询哪些字段
+        2.外连接查询：
+            1.左外连接：
+                语法：select 字段列表 from 表1 left [outer] oin 表2 on 条件;
+            2.右外连接：
+                语法：select 字段列表 from 表1 right [outer] join 表2 on 条件;
+
+        3.子查询：
+            概念：查询中嵌套查询，称嵌套查询为子查询。
+                查询工资最高的员工信息
+                    1.查询最高工资是多少——9000
+                    select MAX(salary) from emp;
+                    2.查询员工信息，并且工资等于9000的；
+                    select * from emp where emp.'salary' = 9000;
+                一条sql就完成此操作：子查询
+                select * from emp where emp.'salary' = (select max(salary) from emp);
+
+            子查询不同情况：
+            1.子查询的结果是单行单列的：
+                子查询可以作为条件，使用运算符去判断。运算符： > < = >= <=
+                查询员工工资小于平均工资的人
+                    select * from emp where emp.salary < (select avg(salary) from emp);
+
+            2.子查询的结果是多行单列的：
+                子查询可以作为条件，使用运算符in来判断
+                查询‘财务部’和‘市场部’所有的员工信息
+                    select id from dept where name = '财务部' or name = '市场部';
+                    select * from emp where dept_id = 3 or dept_id = 2;
+                子查询：
+                    select * from emp where dept_id in (select id from dept where name = '财务部' or name = '市场部');
+
+            3.子查询的结果是多行多列的：
+                子查询可以作为一张虚拟表参与查询
+                查询员工入职日期是2011-11-11日之后的员工信息和部门信息
+                子查询：
+                    select * from dept t1,(select * from emp where emp.'join_date' > '2011-11-11') t2 where t1.id = t2.dept_id;
+                普通内连接
+                    select * from emp t1,dept t2 where t1.'dept_id' = t2.'id' and t1.'join_date' > '2011-11-11';
+
+多表查询练习：
+求：
+1.查询所有员工信息。查询员工编号、员工姓名，工资，职务名称，职务描述
+    分析：
+    员工编号，员工姓名，工资 需要查询emp表，职务名称，职务描述 需要查询job表
+    查询条件： emp.job_id = job.id
+    select
+        t1.'id',            // 员工编号
+        t1.'ename',          // 员工姓名
+        t1.'salary',        //工资
+        t2.'jname'           //职务名称
+        t2.'description'    //职务描述
+    from
+        emp t1,job t2
+    where
+        t1.'job_id' = t2.'id';
+
+2.查询员工编号，员工姓名，工资，职务名称，职务描述，部门名称，部门位置
+    分析：
+        员工编号，员工姓名，工资 emp 职务名称，职务描述 job 部门名称，部门位置 dept
+        条件：emp.job_id = job.id and emp.dept_id = dept.id
+        select
+            t1.'id',            // 员工编号
+            t1.'ename',         // 员工姓名
+            t1.'salary',        //工资
+            t2.'jname',         //职务名称
+            t2.'description',   //职务描述
+            t3.'dname',         //部门名称
+            t3.'loc'            //部门位置
+        from
+            emp t1,job t2,dept t3
+        where
+            t1.'job_id' = t2.'id' and t1.'dept_id' = t3.'id';
+
