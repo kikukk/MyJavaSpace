@@ -7,12 +7,14 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  * @author kikukk
  */
-class test {
+
+public class test {
 
     @Test
     public void test3(){
-        ApplicationContext context = new ClassPathXmlApplicationContext("bean3.xml");
+        ApplicationContext context = new ClassPathXmlApplicationContext("SpringDemo.IOC/bean3.xml");
         Course course = context.getBean("myBean", Course.class);
+
         System.out.println(course);
     }
 }

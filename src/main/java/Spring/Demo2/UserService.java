@@ -13,7 +13,6 @@ class UserService {
     @Qualifier(value = "userDaoImp1")
     private UserDao userDao;
 
-
     public void add(){
         System.out.println("service add.....");
         userDao.add();

@@ -8,7 +8,6 @@ package Spring.Demo1.FactoryBean;
 class Dept {
     private String dname;
 
-
     public void setDname(String dname) {
         this.dname = dname;
     }
